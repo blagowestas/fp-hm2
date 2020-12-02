@@ -11,7 +11,7 @@
   (and (char>=? ch #\0) (char<=? ch #\9)))
 
 
-(define (empty-tree? str index)
+(define (empty-string-tree? str index)
   (char=? (string-ref str index) #\*))
 
 (define (get-first-index-after-number str index) 
@@ -72,7 +72,8 @@
   (define (correct-brackets? str index counter)
     (cond
       ((and (= index (string-length str)) (zero? counter)) #t)
-      ((and (= index (string-length str)) (> counter 0)) #f)      
+      ((and (= index (string-length str)) (> counter 0)) #f)
+      ((and (char=? (string-ref str index) #\{) (zero? counter)) #f) ;значи са подадени две дървета -- неее; глупости.  измисли го. 
       ((char=? (string-ref str index) #\{) (correct-brackets? str (+ 1 index) (+ 1 counter)))
       ((and (char=? (string-ref str index) #\}) (< counter 1) #f))
       ((and (char=? (string-ref str index) #\}) (> counter 0)) (correct-brackets? str (+ 1 index) (- counter 1)))
@@ -92,40 +93,41 @@
   )
 
 
-;(trace is-tree?)
+(trace tree?)
 ;(trace correct-brackets?)
 ;(trace root?)
 ;(trace get-first-index-after-number)
 ;(trace get-last-index)
 
 
+(define (string->tree str)
+
   (define (get-number str index index2)
     (string->number (substring str index index2)))
   
-  
-
-
-
-
-(define (make-tree str index) ;string without whitespace
+  (define (make-tree str index) ;string without whitespace, valid tree, no need of end index.
     (cond
       ((= index (string-length str)) '())
-      ((empty-tree? str index) '())
-      ((is-number? (string-ref str index)) (let ((index2 (get-first-index-after-number str index)))
-                                             (list
-                                              (get-number str index index2)
-                                              (make-tree str index2)
-                                              (make-tree str (if (empty-tree? str index2) (+ 1 index2) (+ 1 (get-last-index str index 0)))))))
+      ((empty-string-tree? str index) '())
+
+      ((is-number? (string-ref str index))
+       (let (
+             (index2 (get-first-index-after-number str index))
+            )
+         (list
+          (get-number str index index2)
+          (make-tree str index2)
+          (make-tree str (if (empty-string-tree? str index2) (+ 1 index2) (+ 1 (get-last-index str index2 0)))))))
      
-      (else (make-tree str (+ 1 index)))))
+      (else (make-tree str (+ 1 index)))
+    )
+   )
+  
+  (if (tree? str)
+      (make-tree (remove-whitespace str 0) 0)
+      #f)
+)
 
-(define (string->tree str)
-
-
-  (if (tree? str) (make-tree (remove-whitespace str 0) 0) #f))
-
-
-;(trace make-tree)
 
 (define (tree-root tree)
   (car tree))
@@ -175,6 +177,33 @@
 )
 
 
+
+
+(define (tree->stream tree order)
+
+  (define (make-stream-inorder tree)
+    (if(empty? tree) empty-stream
+       (stream-append (make-stream-inorder (left-tree tree)) (stream (tree-root tree)) (make-stream-inorder (right-tree tree))))
+    )
+
+  (define (make-stream-preorder tree)
+    (if(empty? tree) empty-stream
+       (stream-append (stream (tree-root tree)) (make-stream-preorder (left-tree tree)) (make-stream-preorder (right-tree tree))))
+    )
+
+  (define (make-stream-postorder tree)
+    (if(empty? tree) empty-stream
+       (stream-append (make-stream-postorder (left-tree tree)) (make-stream-postorder (right-tree tree)) (stream (tree-root tree)) ))
+    )
+
+  (cond
+    ((string=? order "inorder") (make-stream-inorder tree)) ; ЛКД
+    ((string=? order "postorder") (make-stream-postorder tree)) ; ЛДК
+    ((string=? order "preorder") (make-stream-preorder tree)) ; КЛД
+    (else "Wrong order."))
+  )
+
+
 ;
 ;     A
 ;   /   \
@@ -189,11 +218,4 @@
 ;(balanced? '(a (b (d (f (y () ()) ()) ()) (g () ())) (c (e (g () ()) ()) (f () ())))) - f
 ;(balanced? '(a (b (d (f (y () ()) ()) (h () ())) (g (d () ()) ())) (c (e (g () ()) ()) (f () ())))) - t
 ;(balanced? '(a (b (d (f (y () ()) ()) (h () ())) (g (d () ()) ())) (c (e () ()) (f () ())))) - f
-
-
-
-;
-
-
-
    
