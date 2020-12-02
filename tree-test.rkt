@@ -8,6 +8,7 @@
 (include "tree.rkt")
 
 
+
 (test/gui
  (test-suite
     "all tests"
@@ -15,11 +16,12 @@
      "Testing tree?"
      (test-case "Empty tree" (check-true (tree? "*")))
      (test-case "Tree with empty children trees and a lot whitespacces" (check-true (tree? " {  10   *   *}    ")))
-     (test-case "Tree with one child" (check-true (tree? "{10 { 5 * * } *}")))
+     (test-case "Correct tree with one child" (check-true (tree? "{10 { 5 * * } *}")))
      (test-case "Tree with two children and no whitespaces" (check-true (tree? "{10{5**}{15**}}")))
      (test-case "Complex tree" (check-true (tree? "{5 {22 {2 * *} {6 * *}} {1 * {3 {111 * *} *}}}")))
-     (test-case "Tree with more than 2 children" (check-false? (tree? "{5 {22 {2 * *} {6 * *}} {1 * {3 {111 * *} *}} {1 * *}}")))
-     (test-case "Tree with more roots" (check-false? (tree? "{1 2 3 * * }")))
+     (test-case "Tree with more than 2 children" (check-false (tree? "{5 {22 {2 * *} {6 * *}} {1 * {3 {111 * *} *}} {1 * *}}")))
+     (test-case "Tree with only one child." (check-false (tree? "{5 {22 {2 * *} *}}")))
+     (test-case "Tree with more roots" (check-false (tree? "{1 2 3 * * }")))
      (test-case "Wrong tree 1" (check-false (tree? "{}")))
      (test-case "Wrong tree 2" (check-false (tree? "{*}")))
      (test-case "Wrong tree 3" (check-false (tree? "{10{*{{}10")))
@@ -49,15 +51,15 @@
     )
      (test-suite
      "Testing tree->stream?"
-     (test-case "Empty tree, inorder" (check-equal (tree-stream empty-tree "inorder") empty-stream))
-     (test-case "Empty tree, postorder" (check-equal (tree-stream empty-tree "postorder") empty-stream))
-     (test-case "Empty tree, preorder" (check-equal (tree-stream empty-tree "preorder") empty-stream))
-     (test-case "Simple tree, inorder" (check-equal (stream->list (tree-stream '(10 () ()) "inorder")) '(10)))
-     (test-case "Simple tree, postorder" (check-equal (stream->list (tree-stream '(10 () ()) "postorder")) '(10)))
-     (test-case "Simple tree, preorder" (check-equal (stream->list (tree-stream '(10 () ()) "preorder")) '(10)))
-     (test-case "BST, inorder" (check-equal (stream->list (tree-stream '(15 (5 (0 () ()) (10 () ())) (25 (20 () ()) (30 () ()))) "iorder")) '(0 5 10 15 20 25 30)))
-     (test-case "BST, postorder" (check-equal (stream->list (tree-stream '(15 (5 (0 () ()) (10 () ())) (25 (20 () ()) (30 () ()))) "postorder")) '(0 10 5 20 30 25 15)))
-     (test-case "BST, preorder" (check-equal (stream->list (tree-stream '(15 (5 (0 () ()) (10 () ())) (25 (20 () ()) (30 () ()))) "preorder")) '(15 5 0 10 25 20 30)))
+     (test-case "Empty tree, inorder" (check-equal? (tree->stream empty-tree "inorder") empty-stream))
+     (test-case "Empty tree, postorder" (check-equal? (tree->stream empty-tree "postorder") empty-stream))
+     (test-case "Empty tree, preorder" (check-equal? (tree->stream empty-tree "preorder") empty-stream))
+     (test-case "Simple tree, inorder" (check-equal? (stream->list (tree->stream '(10 () ()) "inorder")) '(10)))
+     (test-case "Simple tree, postorder" (check-equal? (stream->list (tree->stream '(10 () ()) "postorder")) '(10)))
+     (test-case "Simple tree, preorder" (check-equal? (stream->list (tree->stream '(10 () ()) "preorder")) '(10)))
+     (test-case "BST, inorder" (check-equal? (stream->list (tree->stream '(15 (5 (0 () ()) (10 () ())) (25 (20 () ()) (30 () ()))) "inorder")) '(0 5 10 15 20 25 30)))
+     (test-case "BST, postorder" (check-equal? (stream->list (tree->stream '(15 (5 (0 () ()) (10 () ())) (25 (20 () ()) (30 () ()))) "postorder")) '(0 10 5 20 30 25 15)))
+     (test-case "BST, preorder" (check-equal? (stream->list (tree->stream '(15 (5 (0 () ()) (10 () ())) (25 (20 () ()) (30 () ()))) "preorder")) '(15 5 0 10 25 20 30)))
     )
    )
 )
