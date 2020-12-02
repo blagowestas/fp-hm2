@@ -1,11 +1,10 @@
 #lang racket
-
 (require racket/trace)
-
+(require racket/stream)
+(require racket/include)
 (require rackunit)
-(require rackunit/text-ui)
+;(require rackunit/text-ui)
 (require rackunit/gui)
-
 
 (define (is-number? ch)
   (and (char>=? ch #\0) (char<=? ch #\9)))
@@ -17,7 +16,7 @@
 (define (get-first-index-after-number str index) 
   (if (is-number? (string-ref str index)) (get-first-index-after-number str (+ 1 index))
       index)
-  )
+)
   
 (define (get-last-index str index number-of-opened-brackets) ;взима индекса на правилната затваряща скоба
   (cond 
@@ -37,6 +36,34 @@
     )
   )
 
+
+(define (correct-brackets? str index counter)
+  (cond
+    ((and (= index (string-length str)) (zero? counter)) #t)
+    ((and (= index (string-length str)) (> counter 0)) #f)
+    ((char=? (string-ref str index) #\{) (correct-brackets? str (+ 1 index) (+ 1 counter)))
+    ((and (char=? (string-ref str index) #\}) (< counter 1) #f))
+    ((and (char=? (string-ref str index) #\}) (> counter 0)) (correct-brackets? str (+ 1 index) (- counter 1)))
+    (else (correct-brackets? str (+ 1 index) counter)))
+  )
+
+(define (number-of-children str first-index last-index)
+
+  (define (helper current-index counter)
+    (cond
+      ((= current-index last-index) counter)
+      ((char=? (string-ref str current-index) #\{) (helper (get-last-index str current-index 0) (+ 1 counter))) ; ако срещнем отваряща скоба, това е текущ наследник, прескачаме го и увеличаваме брояча
+      ((char=? (string-ref str current-index) #\*) (helper (+ 1 current-index) (+ 1 counter))) ; празно дърво - отново текущ наследник и увеличаваме брояча
+      (else (helper (+ 1 current-index) counter))) ; останалите неща, които срещаме са корена и празни разстояния, съответно ги прескачаме
+   )
+
+  (helper (+ 1 first-index) 0) ; прескачаме първата скоба, не искаме да я броим
+) 
+  
+  
+
+
+
 (define (tree? str)
  
   (define (root? str index)
@@ -44,10 +71,11 @@
     )
 
   (define (is-tree? str first-index last-index) ; ПОМИСЛИ КАК ДА ПРЕСКАЧАШ СПЕЙСОВЕТЕ
-    (if (and (char=? (string-ref str first-index) #\*) (= first-index last-index))#t
+    (if (and (char=? (string-ref str first-index) #\*) (= first-index last-index)) #t
         (and
          (char=? (string-ref str first-index) #\{)
          (root? str (+ 1 first-index))
+         (= (number-of-children str first-index last-index) 2)
          (let* (
                 (first-index-left-tree (get-first-index-after-number str (+ 1 first-index))) 
                 (last-index-left-tree (if (char=? (string-ref str first-index-left-tree) #\*) first-index-left-tree (get-last-index str first-index-left-tree 0)))          
@@ -69,19 +97,6 @@
     )
 
 
-  (define (correct-brackets? str index counter)
-    (cond
-      ((and (= index (string-length str)) (zero? counter)) #t)
-      ((and (= index (string-length str)) (> counter 0)) #f)
-      ((and (char=? (string-ref str index) #\{) (zero? counter)) #f) ;значи са подадени две дървета -- неее; глупости.  измисли го. 
-      ((char=? (string-ref str index) #\{) (correct-brackets? str (+ 1 index) (+ 1 counter)))
-      ((and (char=? (string-ref str index) #\}) (< counter 1) #f))
-      ((and (char=? (string-ref str index) #\}) (> counter 0)) (correct-brackets? str (+ 1 index) (- counter 1)))
-      (else (correct-brackets? str (+ 1 index) counter)))
-    )
-
-
-
   (if (correct-brackets? str 0 0)
       (let* (
              (str-without-whitespace (remove-whitespace str 0))
@@ -94,11 +109,11 @@
 
 
 (trace tree?)
-;(trace correct-brackets?)
+(trace correct-brackets?)
 ;(trace root?)
 ;(trace get-first-index-after-number)
 ;(trace get-last-index)
-
+(trace number-of-children)
 
 (define (string->tree str)
 
@@ -113,21 +128,22 @@
       ((is-number? (string-ref str index))
        (let (
              (index2 (get-first-index-after-number str index))
-            )
+             )
          (list
           (get-number str index index2)
           (make-tree str index2)
           (make-tree str (if (empty-string-tree? str index2) (+ 1 index2) (+ 1 (get-last-index str index2 0)))))))
      
       (else (make-tree str (+ 1 index)))
+      )
     )
-   )
   
   (if (tree? str)
       (make-tree (remove-whitespace str 0) 0)
       #f)
-)
+  )
 
+(define empty-tree '())
 
 (define (tree-root tree)
   (car tree))
@@ -150,17 +166,18 @@
          (or (empty? left-tree) (> (tree-root tree) (tree-root left-tree)))
          (or (empty? right-tree) (< (tree-root tree) (tree-root right-tree)))
          (ordered? left-tree) (ordered? right-tree))
+        )
       )
   )
-)
+
 
 (define (height tree)
   (if (empty? tree) 0
       (+ 1 (max
             (height (left-tree tree))
             (height (right-tree tree))))
+      )
   )
-)
 
 
 (define (balanced? tree)
@@ -172,10 +189,9 @@
         (and (<= (abs (- (height left-tree) (height right-tree))) 1)
              (balanced? left-tree)
              (balanced? right-tree))
-       )
-   )
-)
-
+        )
+      )
+  )
 
 
 
@@ -218,4 +234,3 @@
 ;(balanced? '(a (b (d (f (y () ()) ()) ()) (g () ())) (c (e (g () ()) ()) (f () ())))) - f
 ;(balanced? '(a (b (d (f (y () ()) ()) (h () ())) (g (d () ()) ())) (c (e (g () ()) ()) (f () ())))) - t
 ;(balanced? '(a (b (d (f (y () ()) ()) (h () ())) (g (d () ()) ())) (c (e () ()) (f () ())))) - f
-   
