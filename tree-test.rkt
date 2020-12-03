@@ -2,10 +2,9 @@
 
 (require racket/include)
 (require rackunit)
-;(require rackunit/text-ui)
 (require rackunit/gui)
 
-(include "tree.rkt")
+(require "tree.rkt")
 
 
 (test/gui

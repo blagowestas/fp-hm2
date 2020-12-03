@@ -1,10 +1,8 @@
 #lang racket
 (require racket/trace)
 (require racket/stream)
-(require racket/include)
-(require rackunit)
-;(require rackunit/text-ui)
-(require rackunit/gui)
+(provide (all-defined-out))
+
 
 (define (is-number? ch)
   (and (char>=? ch #\0) (char<=? ch #\9)))
@@ -139,6 +137,7 @@
       #f)
   )
 
+
 (define empty-tree '())
 
 (define (empty? tree)
@@ -152,6 +151,9 @@
 
 (define (right-tree tree)
   (caddr tree))
+
+(define (is-leaf? tree)
+  (and (empty? (left-tree tree)) (empty? (right-tree tree))))
 
 (define (is-valid? tree)
   (or
@@ -253,11 +255,32 @@
   )
 
 
+(define (visualize tree)
+  (cond
+    ((empty? tree) " ")
+    ((is-leaf? tree) (number->string (tree-root tree)))
+
+    ((not (empty? (right-tree tree)))
+     (string-append
+      (number->string (tree-root tree))
+      "тук трябва да има определен брой тирета"
+      (visualize (right-tree tree))
+      "тук трябва да има определен брой нови редове и интервали \n"
+      (visualize (left-tree tree)))
+    )
+
+    (else (string-append (number->string (tree-root tree)) "тук нз\n" (visualize (left-tree tree))))))
+     
+;вариант е да заделям границите на стринга, като кутия - с интервали и после да работя с индекси.   
+;дървото от условието
+;(10 (15 (2 () ()) (7 () ())) (5 (22 (2 () ()) (6 () ())) (1 () (3 (111 () ()) ()))))
+
+
 ;
-;     A
-;   /   \
-;  B     C  
-; /     / \  
-;D     E   F  
-;     /  
-;    G  
+;      15
+;   /      \
+;  5        25  
+; / \      /  \  
+;0   10   20   30 
+;          
+;          
