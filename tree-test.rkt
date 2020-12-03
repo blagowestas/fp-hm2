@@ -8,7 +8,6 @@
 (include "tree.rkt")
 
 
-
 (test/gui
  (test-suite
     "all tests"
@@ -38,6 +37,7 @@
      (test-case "Not-ordered tree 1" (check-false (ordered? '(15 (25 (0 () ()) (10 () ())) ()))))
      (test-case "Not-ordered tree 2" (check-false (ordered? '(15 (5 (0 () ()) (10 () ())) (10 () ())))))
      (test-case "Not-ordered tree 3" (check-false (ordered? '(15 (25 () ()) (10 () ())))))
+     (test-case "Invalid tree" (check-equal? (ordered? '(1 (2 (3 () ())) (4 (5 (6 () ()) ()) (7 () ())))) "Invalid tree"))
     )
      (test-suite
      "Testing 'balanced?'"
@@ -49,6 +49,7 @@
      (test-case "Not-ordered tree 1" (check-false (balanced? '(1 (2 (3 () ()) ()) (4 (5 (6 (7 () ()) ()) ()) (8 () ()))))))
      (test-case "Not-ordered tree 2" (check-false (balanced? '(1 (2 (3 (4 (5 () ()) ()) ()) (6 () ())) (7 (8 (9 () ()) ()) (10 () ()))))))
      (test-case "Not-ordered tree 3" (check-false (balanced? '(1 (2 (3 (4 (5 () ()) ()) (6 () ())) (7 (8 () ()) ())) (9 (10 () ()) (11 () ()))))))
+     (test-case "Invalid tree" (check-equal? (balanced? '(1 (2 (3 () ())) (4 (5 (6 () ()) ()) (7 () ())))) "Invalid tree"))
     )
      (test-suite
      "Testing 'tree->stream?'"
@@ -61,6 +62,7 @@
      (test-case "BST, inorder" (check-equal? (stream->list (tree->stream '(15 (5 (0 () ()) (10 () ())) (25 (20 () ()) (30 () ()))) "inorder")) '(0 5 10 15 20 25 30)))
      (test-case "BST, postorder" (check-equal? (stream->list (tree->stream '(15 (5 (0 () ()) (10 () ())) (25 (20 () ()) (30 () ()))) "postorder")) '(0 10 5 20 30 25 15)))
      (test-case "BST, preorder" (check-equal? (stream->list (tree->stream '(15 (5 (0 () ()) (10 () ())) (25 (20 () ()) (30 () ()))) "preorder")) '(15 5 0 10 25 20 30)))
+     (test-case "Invalid tree" (check-equal? (tree->stream '(1 (2 (3 () ())) (4 (5 (6 () ()) ()) (7 () ()))) "inorder") "Invalid tree"))
     )
      (test-suite
      "Testing 'tree->string?'"
@@ -71,6 +73,7 @@
      (test-case "Complex tree 2" (check-equal?
                                   (string->tree (tree->string '(4 (6 (7 (8 (9 () ()) ()) (10 () ())) (11 (12 () ()) ())) (13 (14 (15 () ()) ()) (16 () ())))))
                                   '(4 (6 (7 (8 (9 () ()) ()) (10 () ())) (11 (12 () ()) ())) (13 (14 (15 () ()) ()) (16 () ())))))
+     (test-case "Invalid tree" (check-equal? (tree->string '(1 (2 (3 () ())) (4 (5 (6 () ()) ()) (7 () ())))) "Invalid tree")) 
      )
    )
 )
