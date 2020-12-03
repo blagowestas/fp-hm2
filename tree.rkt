@@ -141,6 +141,9 @@
 
 (define empty-tree '())
 
+(define (empty? tree)
+  (equal? tree empty-tree)) 
+
 (define (tree-root tree)
   (car tree))
 
@@ -150,21 +153,34 @@
 (define (right-tree tree)
   (caddr tree))
 
+(define (is-valid? tree)
+  (or
+   (empty? tree)
+   (and
+    (list? tree)
+    (number? (tree-root tree))
+    (= (length tree) 3)
+    (is-valid? (left-tree tree))
+    (is-valid? (right-tree tree))))
+)
 
 (define (ordered? tree)
-  (or (empty? tree)
-      (let (
-            (left-tree (left-tree tree))
-            (right-tree (right-tree tree))
-            )    
+  (if (not (is-valid? tree))
+      "Invalid tree"
+      (or (empty? tree)
+          (let (
+                (left-tree (left-tree tree))
+                (right-tree (right-tree tree))
+                )    
    
-        (and
-         (or (empty? left-tree) (> (tree-root tree) (tree-root left-tree)))
-         (or (empty? right-tree) (< (tree-root tree) (tree-root right-tree)))
-         (ordered? left-tree) (ordered? right-tree))
-        )
+            (and
+             (or (empty? left-tree) (> (tree-root tree) (tree-root left-tree)))
+             (or (empty? right-tree) (< (tree-root tree) (tree-root right-tree)))
+             (ordered? left-tree) (ordered? right-tree))
+            )
+          )
       )
-  )
+)
 
 
 (define (height tree)
@@ -177,35 +193,39 @@
 
 
 (define (balanced? tree)
-  (or (empty? tree)
-      (let (
-            (left-tree (left-tree tree))
-            (right-tree (right-tree tree))
-            )
-        (and (<= (abs (- (height left-tree) (height right-tree))) 1)
-             (balanced? left-tree)
-             (balanced? right-tree))
-        )
-      )
-  )
+  (if (not (is-valid? tree))
+      "Invalid tree"
+      (or (empty? tree)
+          (let (
+                (left-tree (left-tree tree))
+                (right-tree (right-tree tree))
+                )
+            (and (<= (abs (- (height left-tree) (height right-tree))) 1)
+                 (balanced? left-tree)
+                 (balanced? right-tree))
+          )
+       )
+    )
+)
 
 
 (define (tree->string tree)
-    (if (empty? tree)
-        "*"
-        (string-append
-         "{"
-         (number->string (tree-root tree))
-         " "
-         (tree->string (left-tree tree))
-         " "
-         (tree->string (right-tree tree))
-         "}"
-         )
-    )
+  (if (not (is-valid? tree))
+      "Invalid tree"
+      (if (empty? tree) "*"
+          (string-append
+           "{"
+           (number->string (tree-root tree))
+           " "
+           (tree->string (left-tree tree))
+           " "
+           (tree->string (right-tree tree))
+           "}"
+          )
+       )
+      )
 )
                   
-
 (define (tree->stream tree order)
 
   (define (make-stream-inorder tree)
@@ -222,12 +242,14 @@
     (if(empty? tree) empty-stream
        (stream-append (make-stream-postorder (left-tree tree)) (make-stream-postorder (right-tree tree)) (stream (tree-root tree)) ))
     )
-
-  (cond
-    ((string=? order "inorder") (make-stream-inorder tree)) ; ЛКД
-    ((string=? order "postorder") (make-stream-postorder tree)) ; ЛДК
-    ((string=? order "preorder") (make-stream-preorder tree)) ; КЛД
-    (else "Wrong order."))
+  (if (not (is-valid? tree))
+      "Invalid tree"
+      (cond
+        ((string=? order "inorder") (make-stream-inorder tree)) ; ЛКД
+        ((string=? order "postorder") (make-stream-postorder tree)) ; ЛДК
+        ((string=? order "preorder") (make-stream-preorder tree)) ; КЛД
+        (else "Wrong order."))
+      )
   )
 
 
@@ -239,9 +261,3 @@
 ;D     E   F  
 ;     /  
 ;    G  
-
-;balanced: '(a (b (d () ()) ()) (c (e (g () ()) ()) (f () ()))))
-;not-balanced '(a (b (d () ()) ()) (c (e (g (t () ()) ()) ()) (f () ()))))
-;(balanced? '(a (b (d (f (y () ()) ()) ()) (g () ())) (c (e (g () ()) ()) (f () ())))) - f
-;(balanced? '(a (b (d (f (y () ()) ()) (h () ())) (g (d () ()) ())) (c (e (g () ()) ()) (f () ())))) - t
-;(balanced? '(a (b (d (f (y () ()) ()) (h () ())) (g (d () ()) ())) (c (e () ()) (f () ())))) - f
