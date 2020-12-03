@@ -1,6 +1,10 @@
 #lang racket
 (require racket/trace)
 (require racket/stream)
+(require racket/include)
+(require rackunit)
+;(require rackunit/text-ui)
+(require rackunit/gui)
 
 (define (is-number? ch)
   (and (char>=? ch #\0) (char<=? ch #\9)))
@@ -185,6 +189,22 @@
       )
   )
 
+
+(define (tree->string tree)
+    (if (empty? tree)
+        "*"
+        (string-append
+         "{"
+         (number->string (tree-root tree))
+         " "
+         (tree->string (left-tree tree))
+         " "
+         (tree->string (right-tree tree))
+         "}"
+         )
+    )
+)
+                  
 
 (define (tree->stream tree order)
 
