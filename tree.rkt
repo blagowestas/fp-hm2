@@ -255,6 +255,35 @@
   )
 
 
+(define (level-elements n tree)
+  (cond
+    ((empty? tree) '())
+    ((= n 1) (list (tree-root tree)))
+    (else (append (level-elements (- n 1) (left-tree tree)) (level-elements (- n 1) (right-tree tree)))))
+)
+
+
+(define (get-level-list n tree) ;подаваме височината на дървото, която съвпада с броя на нивата
+  (cond
+    ((zero? n) '())
+    (else (append (list (level-elements n tree)) (get-level-list (- n 1) tree))))
+)
+
+
+                   
+(define (width tree)
+  (foldr
+   (lambda (current result) (max (length current) result))
+   0
+   (get-level-list (height tree) tree))
+)
+
+
+(define (get-n-dashes n)
+  (if (zero? n) ""
+      (string-append "-" (get-n-dashes (- n 1)))))
+
+
 (define (visualize tree)
   (cond
     ((empty? tree) " ")
@@ -263,14 +292,17 @@
     ((not (empty? (right-tree tree)))
      (string-append
       (number->string (tree-root tree))
-      "тук трябва да има определен брой тирета"
+      (get-n-dashes (* 2 (width (left-tree tree))))
       (visualize (right-tree tree))
       "тук трябва да има определен брой нови редове и интервали \n"
       (visualize (left-tree tree)))
     )
 
-    (else (string-append (number->string (tree-root tree)) "тук нз\n" (visualize (left-tree tree))))))
-     
+    (else (string-append (number->string (tree-root tree)) "тук нз\n" (visualize (left-tree tree)))))
+)
+ 
+
+
 ;вариант е да заделям границите на стринга, като кутия - с интервали и после да работя с индекси.   
 ;дървото от условието
 ;(10 (15 (2 () ()) (7 () ())) (5 (22 (2 () ()) (6 () ())) (1 () (3 (111 () ()) ()))))
@@ -283,4 +315,4 @@
 ; / \      /  \  
 ;0   10   20   30 
 ;          
-;          
+; '(15 (5 (0 () ()) (10 () ())) (25 (20 () ()) (30 () ())))         
