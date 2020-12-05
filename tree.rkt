@@ -13,7 +13,7 @@
 (define (get-first-index-after-number str index) 
   (if (is-number? (string-ref str index)) (get-first-index-after-number str (+ 1 index))
       index)
-  )
+)
   
 (define (get-last-index str index number-of-opened-brackets) ;взима индекса на правилната затваряща скоба
   (cond 
@@ -23,7 +23,7 @@
     ((and (char=? (string-ref str index) #\}) (> number-of-opened-brackets 1)) (get-last-index str (+ 1 index) (- number-of-opened-brackets 1)))
     (else (get-last-index str (+ 1 index) number-of-opened-brackets))
     )
-  ) 
+) 
 
 (define (remove-whitespace str index)
   (cond
@@ -70,8 +70,8 @@
 
   (define (is-tree? str first-index last-index) ;
     (if (and (char=? (string-ref str first-index) #\*) (= first-index last-index)) #t
-        (and
-         (char=? (string-ref str first-index) #\{)
+        (and 
+         (char=? (string-ref str first-index) #\{) 
          (= (number-of-children str first-index last-index) 2)
 
          (let* (  ;проверка за валидни корен, ляво и дясно поддърво
@@ -86,7 +86,7 @@
                 )
            (and ;тук проверяваме дали имаме валиден корен и ляво поддърво
             (string-tree-root? str root-index)
-            (is-tree? str first-index-left-tree last-index-left-tree) ;ако имаме валидно ляво поддърво, следващият индекс е на дясното, трябва да го проверим
+            (is-tree? str first-index-left-tree last-index-left-tree) ;ако имаме валидно ляво поддърво, проверяваме дали дясното е валидно
 
             (let* (
                    (first-index-right-tree (skip-whitespaces str (+ 1 last-index-left-tree)))
@@ -131,7 +131,7 @@
       (else (make-tree str (+ 1 index)))
       )
     )
-  
+
   (if (tree? str)
       (make-tree (remove-whitespace str 0) 0)
       #f)
@@ -153,7 +153,8 @@
   (caddr tree))
 
 (define (is-leaf? tree)
-  (and (empty? (left-tree tree)) (empty? (right-tree tree))))
+  (if (empty? tree) #f
+      (and (empty? (left-tree tree)) (empty? (right-tree tree)))))
 
 (define (is-valid? tree)
   (or
@@ -279,35 +280,119 @@
 )
 
 
-(define (get-n-dashes n)
+(define (get-n-chars n ch)
   (if (zero? n) ""
-      (string-append "-" (get-n-dashes (- n 1)))))
+      (string-append ch (get-n-chars (- n 1) ch))))
 
 
-(define (visualize tree)
-  (cond
-    ((empty? tree) " ")
-    ((is-leaf? tree) (number->string (tree-root tree)))
+(define (get-level tree elem)
+  
+  (define (helper current-level current-tree)
+    (cond
+      ((or (> current-level (height tree)) (empty? current-tree)) #f)
+      ((= (tree-root current-tree) elem) current-level)
+      (else (or (helper (+ 1 current-level) (left-tree current-tree)) (helper (+ 1 current-level) (right-tree current-tree))))))
 
-    ((not (empty? (right-tree tree)))
-     (string-append
-      (number->string (tree-root tree))
-      (get-n-dashes (* 2 (width (left-tree tree))))
-      (visualize (right-tree tree))
-      "тук трябва да има определен брой нови редове и интервали \n"
-      (visualize (left-tree tree)))
-    )
+  (helper 1 tree))
 
-    (else (string-append (number->string (tree-root tree)) "тук нз\n" (visualize (left-tree tree)))))
+  (define (helper tree current-level)
+    (cond
+      ((empty? tree) "")
+     ;((is-leaf? tree) (string-append "\n" (get-n-chars (+ 1 (* 3 current-level)) " ") "|\n" (get-n-chars (+ 1 (* 3 current-level)) " ") (number->string (tree-root tree)) "\n"))
+
+      (else
+       (string-append
+        (number->string (tree-root tree))
+        (get-n-chars (+ 1 (* 3 (width (left-tree tree)))) "-")
+        (helper (right-tree tree) (+ 1 current-level))
+        "\n"
+        ;(get-n-chars (* 2 current-level) " ")
+        ;"|\n"
+        ;(get-n-chars (* 2 current-level) " ")
+        ;(get-n-chars (height (right-tree tree)) "\n")
+        (get-n-chars (+ 1 (* 3 (width (left-tree tree)))) " ")
+        (helper (left-tree tree) (+ 1 current-level)))
+       )
+
+;      (else (string-append (number->string (tree-root tree)) "\n" (get-n-chars (* 2 (width tree)) " ") (helper (left-tree tree) (+ 1 current-level)))))
+ )   )
+
+;(trace helper)
+
+(define (visualize original-tree)
+
+  (helper original-tree 1) 
+
+  
 )
+
+(define (number-of-digits number)
+  (define (helper current-number counter)
+    (if (zero? current-number) counter
+        (helper (quotient current-number 10) (+ 1 counter))))
+
+     (if (zero? number) 1 (helper number 0)))
+
+(define (print-left tree height-right number-of-spaces) ; current-level polzwame go za da znaem kolko space-a nawutre trqbwa da e
+  (if (empty? tree) ""
+      (string-append
+       "\n"
+       (get-n-chars number-of-spaces " ")
+       (get-n-chars (+ 1 height-right) "|\n")
+       (get-n-chars number-of-spaces " ")
+       (number->string (tree-root tree))
+       
+       (print-right (right-tree tree) (width (left-tree tree))  number-of-spaces)
+       (print-left (left-tree tree) (height (right-tree tree))  number-of-spaces)))
+)
+
+  
+(define (print-right tree width-left number-of-spaces)
+  (if (empty? tree)
+      ""
+      (string-append
+       (get-n-chars (+ 1 (* 3 width-left)) "-")
+       (number->string (tree-root tree))
+       (print-right (right-tree tree) (width (left-tree tree)) (+ (+ 1 (* 3 width-left)) number-of-spaces (number-of-digits (tree-root tree))))
+       (print-left (left-tree tree) (height (right-tree tree)) (+ (+ 1 (* 3 width-left)) number-of-spaces (number-of-digits (tree-root tree))))))
+  )
+
+
+(define (proba tree)
  
+  (if (empty? tree) ""
+      (string-append
+       (number->string (tree-root tree))
+       (print-right (right-tree tree) (width (left-tree tree)) 1)
+       (if (empty? (left-tree tree)) "" 
+           (string-append
+            "\n|\n"
+            (get-n-chars (* 3 (width (left-tree tree))) " ")
+            (print-left (left-tree tree) (height (right-tree tree)) 0) 
+            )))
+      )
+  )
+
+
+;(trace proba)
+;(trace print-left)
+;(trace print-right)
+;(trace get-n-chars)
 
 
 ;вариант е да заделям границите на стринга, като кутия - с интервали и после да работя с индекси.   
 ;дървото от условието
 ;(10 (15 (2 () ()) (7 () ())) (5 (22 (2 () ()) (6 () ())) (1 () (3 (111 () ()) ()))))
-
-
+;
+;10-----5------1--3
+;|      |         |
+;|      |         111 ; около 10 интервала?? и там където е корена някак си да слагаме вертикалните черти
+;|      22--6
+;|      |
+;|      2
+;15--7
+;|
+;2
 ;
 ;      15
 ;   /      \
@@ -315,4 +400,6 @@
 ; / \      /  \  
 ;0   10   20   30 
 ;          
-; '(15 (5 (0 () ()) (10 () ())) (25 (20 () ()) (30 () ())))         
+; '(15 (5 (0 () ()) (10 () ())) (25 (20 () ()) (30 () ())))
+
+
