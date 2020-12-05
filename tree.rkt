@@ -295,36 +295,7 @@
 
   (helper 1 tree))
 
-  (define (helper tree current-level)
-    (cond
-      ((empty? tree) "")
-     ;((is-leaf? tree) (string-append "\n" (get-n-chars (+ 1 (* 3 current-level)) " ") "|\n" (get-n-chars (+ 1 (* 3 current-level)) " ") (number->string (tree-root tree)) "\n"))
 
-      (else
-       (string-append
-        (number->string (tree-root tree))
-        (get-n-chars (+ 1 (* 3 (width (left-tree tree)))) "-")
-        (helper (right-tree tree) (+ 1 current-level))
-        "\n"
-        ;(get-n-chars (* 2 current-level) " ")
-        ;"|\n"
-        ;(get-n-chars (* 2 current-level) " ")
-        ;(get-n-chars (height (right-tree tree)) "\n")
-        (get-n-chars (+ 1 (* 3 (width (left-tree tree)))) " ")
-        (helper (left-tree tree) (+ 1 current-level)))
-       )
-
-;      (else (string-append (number->string (tree-root tree)) "\n" (get-n-chars (* 2 (width tree)) " ") (helper (left-tree tree) (+ 1 current-level)))))
- )   )
-
-;(trace helper)
-
-(define (visualize original-tree)
-
-  (helper original-tree 1) 
-
-  
-)
 
 (define (number-of-digits number)
   (define (helper current-number counter)
@@ -358,7 +329,7 @@
   )
 
 
-(define (proba tree)
+(define (visualize tree)
  
   (if (empty? tree) ""
       (string-append
