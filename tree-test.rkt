@@ -13,7 +13,7 @@
     (test-suite
      "Testing 'tree?'"
      (test-case "Empty tree" (check-true (tree? "*")))
-     (test-case "Tree with empty children trees and a lot whitespacces" (check-true (tree? "{  10   *   *}")))
+     (test-case "Tree with empty children trees and a lot whitespacces" (check-true (tree? "   {  10   *   *}  ")))
      (test-case "Correct tree with one child" (check-true (tree? "{10 { 5 * * } *}")))
      (test-case "Tree with two children and no whitespaces" (check-true (tree? "{10{5**}{15**}}")))
      (test-case "Complex tree" (check-true (tree? "{5 {22 {2 * *} {6 * *}} {1 * {3 {111 * *} *}}}")))
@@ -21,12 +21,13 @@
      (test-case "Tree with only one child." (check-false (tree? "{5 {22 {2 * *} *}}")))
      (test-case "Tree with more roots" (check-false (tree? "{1 2 3 * * }")))
      (test-case "Missing root" (check-false (tree? "{ * {1 * *}}")))
-     (test-case "Wrong tree 1" (check-false (tree? "{}")))
-     (test-case "Wrong tree 2" (check-false (tree? "{*}")))
-     (test-case "Wrong tree 3" (check-false (tree? "{10{*{{}10")))
-     (test-case "Wrong tree 4" (check-false (tree? "{10*10}")))
-     (test-case "Wrong tree 5" (check-false (tree? "}{")))
-     (test-case "Wrong tree 6" (check-false (tree? "***")))
+     (test-case "Wrong empty tree" (check-false (tree? "{}")))
+     (test-case "Wrong empty tree 2" (check-false (tree? "{*}")))
+     (test-case "Wrong number of brackets" (check-false (tree? "{10{*{{}10")))
+     (test-case "Wrong right tree" (check-false (tree? "{10*10}")))
+     (test-case "Wrong left tree" (check-false (tree? "{10 10 *}")))
+     (test-case "Wrong brackets" (check-false (tree? "}{")))
+     (test-case "Wrong root" (check-false (tree? "***")))
     )
     (test-suite
      "Testing 'ordered?'"
