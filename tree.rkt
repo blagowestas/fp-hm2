@@ -33,8 +33,8 @@
     )
   )
  
-(define (skip-whitespaces str index) ;прескача интервалите
-  (if (not (char-whitespace? (string-ref str index))) index
+(define (skip-whitespaces str index) 
+  (if (or (= index (string-length str)) (not (char-whitespace? (string-ref str index)))) index
       (skip-whitespaces str (+ 1 index)))
   )
 
@@ -43,78 +43,72 @@
   )
 
 
-
 (define (tree? str)
 
-  (define (correct-brackets? str index counter)
+  (define (check-subtrees str index subs)
+    (cond
+      ((= index (string-length str)) #t)
+      ((and (char=? (string-ref str index) #\*) (null? subs))   (or (= (+ 1 index) (string-length str)) (= (skip-whitespaces str (+ 1 index)) (string-length str))));empty tree
+    
+      ((and (not (char=? (string-ref str index) #\*)) (not (char=? (string-ref str index) #\{)) (not (char=? (string-ref str index) #\}))) (check-subtrees str (+ 1 index) subs)); skip other chars
+
+      ((char=? (string-ref str index) #\{) (check-subtrees str (+ 1 index) (cons 0 subs)))
+    
+      ((char=? (string-ref str index) #\*) (check-subtrees str (+ 1 index) (cons (+ 1 (car subs)) (cdr subs))))
+      ((and (char=? (string-ref str index) #\}) (= 2 (car subs)) (not (null? (cdr subs)))) (check-subtrees str (+ 1 index) (cons (+ 1 (cadr subs)) (cddr subs))))
+      ((and (char=? (string-ref str index) #\}) (= 2 (car subs)) (null? (cdr subs))) #t) ; last bracket 
+      (else #f)))
+
+
+  (define (correct-brackets? str index counter) 
     (cond
       ((and (= index (string-length str)) (zero? counter)) #t)
       ((and (= index (string-length str)) (> counter 0)) #f)
       ((char=? (string-ref str index) #\{) (correct-brackets? str (+ 1 index) (+ 1 counter)))
-      ((and (char=? (string-ref str index) #\}) (< counter 1) #f))
+      ((and (char=? (string-ref str index) #\}) (< counter 1)) #f)
       ((and (char=? (string-ref str index) #\}) (> counter 0)) (correct-brackets? str (+ 1 index) (- counter 1)))
-      (else (correct-brackets? str (+ 1 index) counter)))
+      (else (correct-brackets? str (+ 1 index) counter))))
+
+
+  (define (check-tree str index should-be child) ;
+    (cond
+      ((= index (string-length str)) #t)
+      ((char-whitespace? (string-ref str index)) (check-tree str (+ 1 index) should-be child))
+
+      ((and (char=? (string-ref str index) #\*)  (equal? should-be 'beg) (equal? child 'main)) ;проверка за празното дърво
+       (or (= (+ 1 index) (string-length str)) (= (skip-whitespaces str (+ 1 index)) (string-length str))))  
+
+      ((and (is-number? (string-ref str index)) (equal? should-be 'number)) (check-tree str (get-first-index-after-number str index) 'beg 'left)) ;beg = { or *
+
+      ((and (char=? (string-ref str index) #\{) (equal? should-be 'beg)) (check-tree str (+ 1 index) 'number child))
+
+      ((and (char=? (string-ref str index) #\*) (equal? should-be 'beg) (equal? child 'left)) (check-tree str (+ 1 index) 'beg 'right))
+      
+      ((and (char=? (string-ref str index) #\*) (equal? should-be 'beg) (equal? child 'right)) (check-tree str (+ 1 index) 'end 'right)) 
+      
+      ((and (char=? (string-ref str index) #\}) (equal? should-be 'end) (equal? child 'left)) (check-tree str (+ 1 index) 'beg 'right))
+      
+      ((and (char=? (string-ref str index) #\}) (equal? should-be 'end) (equal? child 'right)) (or (= (skip-whitespaces str index) (string-length str))
+                                                                                                   (check-tree str (+ 1 index) 'end 'right)
+                                                                                                   (check-tree str (+ 1 index) 'beg 'right)))
+      
+      (else #f))
     )
 
-  (define (number-of-children str first-index last-index)
-    (define (helper current-index counter)
-      (cond
-        ((= current-index last-index) counter)
-        ((char=? (string-ref str current-index) #\{) (helper (get-last-index str current-index 0) (+ 1 counter))) ; ако срещнем отваряща скоба, това е текущ наследник, прескачаме го и увеличаваме брояча
-        ((char=? (string-ref str current-index) #\*) (helper (+ 1 current-index) (+ 1 counter))) ; празно дърво - отново текущ наследник и увеличаваме брояча
-        (else (helper (+ 1 current-index) counter))) ; останалите неща, които срещаме са корена и празни разстояния, съответно ги прескачаме
-      )
 
-    (helper (+ 1 first-index) 0) ; прескачаме първата скоба, не искаме да я броим
-  )
-
-  (define (is-tree? str first-index last-index) ;
-    (if (and (char=? (string-ref str first-index) #\*) (= first-index last-index)) #t
-        (and 
-         (char=? (string-ref str first-index) #\{) 
-         (= (number-of-children str first-index last-index) 2)
-
-         (let* (  ;проверка за валидни корен, ляво и дясно поддърво
-                (root-index (skip-whitespaces str (+ 1 first-index)))
-                
-                (first-index-left-tree (skip-whitespaces str (get-first-index-after-number str root-index)))
-                
-                (last-index-left-tree (if (empty-string-tree? str first-index-left-tree) ;ако е празно дървото, първият индекс съвпада с последния; иначе търсим правилната затваряща скоба
-                                          first-index-left-tree
-                                          (get-last-index str first-index-left-tree 0)))
-                
-                )
-           (and ;тук проверяваме дали имаме валиден корен и ляво поддърво
-            (string-tree-root? str root-index)
-            (is-tree? str first-index-left-tree last-index-left-tree) ;ако имаме валидно ляво поддърво, проверяваме дали дясното е валидно
-
-            (let* (
-                   (first-index-right-tree (skip-whitespaces str (+ 1 last-index-left-tree)))
-                   (last-index-right-tree (if (empty-string-tree? str first-index-right-tree)
-                                              first-index-right-tree
-                                              (get-last-index str first-index-right-tree 0)))
-                   )
-              (is-tree? str first-index-right-tree last-index-right-tree)
-              )
-            )
-           )
-
-         (char=? (string-ref str last-index) #\}))
-        )
-    )
-
-  (if (correct-brackets? str 0 0) (is-tree? str 0 (- (string-length str) 1))
-      #f
-  )
+  
+  (if (and (correct-brackets? str 0 0) (check-subtrees str 0 '()))
+      (check-tree str 0 'beg 'main)
+      #f)
 )
-
+    
 
 (define (string->tree str)
 
   (define (get-number str index index2)
     (string->number (substring str index index2)))
   
-  (define (make-tree str index) ;валидно дърво, няма нужда от последен индекс, подаваме го без интервали
+  (define (make-tree str index) ;валидно дърво, подаваме го без интервали
     (cond
       ((= index (string-length str)) '())
       ((empty-string-tree? str index) '())
