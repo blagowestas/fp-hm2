@@ -77,24 +77,16 @@
 
       ((and (char=? (string-ref str index) #\*)  (equal? should-be 'beg) (equal? child 'main)) ;проверка за празното дърво
        (or (= (+ 1 index) (string-length str)) (= (skip-whitespaces str (+ 1 index)) (string-length str))))  
-
       ((and (is-number? (string-ref str index)) (equal? should-be 'number)) (check-tree str (get-first-index-after-number str index) 'beg 'left)) ;beg = { or *
-
       ((and (char=? (string-ref str index) #\{) (equal? should-be 'beg)) (check-tree str (+ 1 index) 'number child))
-
       ((and (char=? (string-ref str index) #\*) (equal? should-be 'beg) (equal? child 'left)) (check-tree str (+ 1 index) 'beg 'right))
-      
       ((and (char=? (string-ref str index) #\*) (equal? should-be 'beg) (equal? child 'right)) (check-tree str (+ 1 index) 'end 'right)) 
-      
       ((and (char=? (string-ref str index) #\}) (equal? should-be 'end) (equal? child 'left)) (check-tree str (+ 1 index) 'beg 'right))
-      
       ((and (char=? (string-ref str index) #\}) (equal? should-be 'end) (equal? child 'right)) (or (= (skip-whitespaces str index) (string-length str))
                                                                                                    (check-tree str (+ 1 index) 'end 'right)
                                                                                                    (check-tree str (+ 1 index) 'beg 'right)))
-      
       (else #f))
     )
-
 
   
   (if (and (correct-brackets? str 0 0) (check-subtrees str 0 '()))
@@ -242,9 +234,9 @@
   (if (not (is-valid? tree))
       "Invalid tree"
       (cond
-        ((string=? order "inorder") (make-stream-inorder tree)) ; ЛКД
-        ((string=? order "postorder") (make-stream-postorder tree)) ; ЛДК
-        ((string=? order "preorder") (make-stream-preorder tree)) ; КЛД
+        ((equal? order 'inorder) (make-stream-inorder tree)) ; ЛКД
+        ((equal? order 'postorder) (make-stream-postorder tree)) ; ЛДК
+        ((equal? order 'preorder) (make-stream-preorder tree)) ; КЛД
         (else "Wrong order."))
       )
   )
