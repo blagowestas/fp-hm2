@@ -13,6 +13,7 @@
     (test-suite
      "Testing 'tree?'"
      (test-case "Empty tree" (check-true (tree? "*")))
+     (test-case "Empty tree with whitespaces" (check-true (tree? "   *")))
      (test-case "Tree with empty children trees and a lot whitespacces" (check-true (tree? "   {  10   *   *}  ")))
      (test-case "Correct tree with one child" (check-true (tree? "{10 { 5 * * } *}")))
      (test-case "Tree with two children and no whitespaces" (check-true (tree? "{10{5**}{15**}}")))
@@ -23,6 +24,7 @@
      (test-case "Missing root" (check-false (tree? "{ * {1 * *}}")))
      (test-case "Wrong empty tree" (check-false (tree? "{}")))
      (test-case "Wrong empty tree 2" (check-false (tree? "*}")))
+     (test-case "Wrong empty tree 3" (check-false (tree? "* 12")))
      (test-case "Wrong number of brackets" (check-false (tree? "{10{*{{}10")))
      (test-case "Wrong right tree" (check-false (tree? "{10*10}")))
      (test-case "Wrong left tree" (check-false (tree? "{10 10 *}")))
@@ -70,9 +72,9 @@
      (test-case "Simple tree" (check-equal? (tree->string '(10 () ())) "{10 * *}")) 
      (test-case "BST" (check-equal? (tree->string '(15 (5 (0 () ()) (10 () ())) (25 (20 () ()) (30 () ())))) "{15 {5 {0 * *} {10 * *}} {25 {20 * *} {30 * *}}}"))
      (test-case "Complex tree 1" (check-equal? (tree->string '(1 (2 (3 () ()) ()) (4 (5 (6 () ()) ()) (7 () ())))) "{1 {2 {3 * *} *} {4 {5 {6 * *} *} {7 * *}}}"))
-     (test-case "Complex tree 2" (check-equal?
-                                  (string->tree (tree->string '(4 (6 (7 (8 (9 () ()) ()) (10 () ())) (11 (12 () ()) ())) (13 (14 (15 () ()) ()) (16 () ())))))
-                                  '(4 (6 (7 (8 (9 () ()) ()) (10 () ())) (11 (12 () ()) ())) (13 (14 (15 () ()) ()) (16 () ())))))
+     (test-case "Complex tree 2" (check-equal? (tree->string '(4 (6 (7 (8 (9 () ()) ()) (10 () ())) (11 (12 () ()) ())) (13 (14 (15 () ()) ()) (16 () ()))))
+                                               "{4 {6 {7 {8 {9 * *} *} {10 * *}} {11 {12 * *} *}} {13 {14 {15 * *} *} {16 * *}}}"))
+                                  
      (test-case "Invalid tree" (check-equal? (tree->string '(1 (2 (3 () ())) (4 (5 (6 () ()) ()) (7 () ())))) "Invalid tree")) 
      )
    )
