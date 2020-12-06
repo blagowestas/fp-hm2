@@ -281,8 +281,10 @@
 
 
 (define (get-n-chars n ch)
-  (if (zero? n) ""
-      (string-append ch (get-n-chars (- n 1) ch))))
+  (define (helper n result)
+    (if (< n 1) result
+      (helper (- n 1) (string-append ch result))))
+  (helper n ""))
 
 
 (define (get-level tree elem)
@@ -304,60 +306,59 @@
 
      (if (zero? number) 1 (helper number 0)))
 
-(define (print-left tree height-right number-of-spaces) ; current-level polzwame go za da znaem kolko space-a nawutre trqbwa da e
-  (if (empty? tree) ""
-      (string-append
+(define (print-left tree height-right number-of-spaces) 
+  (cond
+    ((empty? tree) "")
+    ((is-leaf? tree) (string-append "\n" (get-n-chars (- number-of-spaces 1) " ") "|\n" (get-n-chars (- number-of-spaces 1) " ") (number->string (tree-root tree))))
+    (else   (string-append
        "\n"
        (get-n-chars number-of-spaces " ")
-       (get-n-chars (+ 1 height-right) "|\n")
+       "|\n"
        (get-n-chars number-of-spaces " ")
        (number->string (tree-root tree))
-       
        (print-right (right-tree tree) (width (left-tree tree))  number-of-spaces)
-       (print-left (left-tree tree) (height (right-tree tree))  number-of-spaces)))
+       (print-left (left-tree tree) (height (right-tree tree))  number-of-spaces))))
 )
 
   
 (define (print-right tree width-left number-of-spaces)
-  (if (empty? tree)
-      ""
-      (string-append
-       (get-n-chars (+ 1 (* 3 width-left)) "-")
-       (number->string (tree-root tree))
-       (print-right (right-tree tree) (width (left-tree tree)) (+ (+ 1 (* 3 width-left)) number-of-spaces (number-of-digits (tree-root tree))))
-       (print-left (left-tree tree) (height (right-tree tree)) (+ (+ 1 (* 3 width-left)) number-of-spaces (number-of-digits (tree-root tree))))))
-  )
-
-
-(define (visualize tree)
+  (cond
+    ((empty? tree) "")
+    ((is-leaf? tree) (string-append "--" (number->string (tree-root tree))))
+    (else
+     (string-append 
+      (get-n-chars (+ 1 width-left) "--")
+      (number->string (tree-root tree))
+      (print-right (right-tree tree) (width (left-tree tree)) (+ (* 2 (+ 1 width-left)) number-of-spaces (number-of-digits (tree-root tree))))
+      (print-left (left-tree tree) (height (right-tree tree)) (+ (* 2 (+ 1 width-left)) number-of-spaces (number-of-digits (tree-root tree)))))))
+    )
  
-  (if (empty? tree) ""
-      (string-append
-       (number->string (tree-root tree))
-       (print-right (right-tree tree) (width (left-tree tree)) 1)
-       (if (empty? (left-tree tree)) "" 
-           (string-append
-            "\n|\n"
-            (get-n-chars (* 3 (width (left-tree tree))) " ")
-            (print-left (left-tree tree) (height (right-tree tree)) 0) 
-            )))
-      )
-  )
+
+(define (visualize tree) 
+ 
+  (cond
+    ((not (is-valid? tree)) "Invalid tree")
+    ((empty? tree) "")
+    (else
+     (string-append
+      (number->string (tree-root tree))
+      (print-right (right-tree tree) (width (left-tree tree)) (number-of-digits (tree-root tree))) 
+      (print-left (left-tree tree) (height (right-tree tree)) 0)
+      )))
+ )
 
 
-;(trace proba)
+;(trace visualize)
 ;(trace print-left)
 ;(trace print-right)
 ;(trace get-n-chars)
 
-
-;вариант е да заделям границите на стринга, като кутия - с интервали и после да работя с индекси.   
 ;дървото от условието
 ;(10 (15 (2 () ()) (7 () ())) (5 (22 (2 () ()) (6 () ())) (1 () (3 (111 () ()) ()))))
 ;
 ;10-----5------1--3
 ;|      |         |
-;|      |         111 ; около 10 интервала?? и там където е корена някак си да слагаме вертикалните черти
+;|      |         111 
 ;|      22--6
 ;|      |
 ;|      2
@@ -365,12 +366,17 @@
 ;|
 ;2
 ;
-;      15
+;      10
 ;   /      \
-;  5        25  
+;  15       5  
 ; / \      /  \  
-;0   10   20   30 
-;          
-; '(15 (5 (0 () ()) (10 () ())) (25 (20 () ()) (30 () ())))
+;2   7   22    1
+;       /  \    \
+;      2    6    3
+;               /
+;              111
+;
+;
+;BST: '(15 (5 (0 () ()) (10 () ())) (25 (20 () ()) (30 () ())))
 
 
