@@ -22,7 +22,7 @@
      (test-case "Tree with more roots" (check-false (tree? "{1 2 3 * * }")))
      (test-case "Missing root" (check-false (tree? "{ * {1 * *}}")))
      (test-case "Wrong empty tree" (check-false (tree? "{}")))
-     (test-case "Wrong empty tree 2" (check-false (tree? "{*}")))
+     (test-case "Wrong empty tree 2" (check-false (tree? "*}")))
      (test-case "Wrong number of brackets" (check-false (tree? "{10{*{{}10")))
      (test-case "Wrong right tree" (check-false (tree? "{10*10}")))
      (test-case "Wrong left tree" (check-false (tree? "{10 10 *}")))
