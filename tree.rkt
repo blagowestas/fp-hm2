@@ -1,4 +1,4 @@
-#lang racket/base
+#lang racket
 (require racket/trace)
 (require racket/stream)
 (provide (all-defined-out))
@@ -89,7 +89,7 @@
     )
 
   
-  (if (and (correct-brackets? str 0 0) (check-subtrees str 0 '()) (not (string=? "" str)) )
+  (if (and (correct-brackets? str 0 0) (check-subtrees str 0 '()) (not (string=? "" (remove-whitespace str 0))))
       (check-tree str 0 'beg 'main)
       #f)
   )
@@ -188,6 +188,14 @@
 
 
 (define (ordered? tree)
+
+  (define (check-subtree root tree op)
+    (foldl
+     (lambda (current result) (and result (op root current)))
+     #t
+     (flatten tree))
+    )
+  
   (if (not (is-valid? tree))
       "Invalid tree"
       (or (empty? tree)
@@ -197,8 +205,8 @@
                 )    
    
             (and
-             (or (empty? left-tree) (> (tree-root tree) (tree-root left-tree)))
-             (or (empty? right-tree) (< (tree-root tree) (tree-root right-tree)))
+             (check-subtree (tree-root tree) left-tree >)
+             (check-subtree (tree-root tree) right-tree <)
              (ordered? left-tree) (ordered? right-tree))
             )
           )
